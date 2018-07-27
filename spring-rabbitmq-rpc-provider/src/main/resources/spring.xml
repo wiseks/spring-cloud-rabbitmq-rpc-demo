@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+    http://www.springframework.org/schema/rabbit
+    http://www.springframework.org/schema/rabbit/spring-rabbit-1.7.xsd">
+<!--服务端封装-->
+    <bean id="listener"
+class="org.springframework.amqp.remoting.service.AmqpInvokerServiceExporter">
+                <!--服务接口-->
+        <property name="serviceInterface" value="com.service.AccountService" />
+        <property name="service" ref="service" />
+        <property name="amqpTemplate" ref="template" />
+    </bean>
+   <!--接口实现的封装-->
+    <bean id="service" class="com.service.AccountServiceImpl" />
+
+    <rabbit:connection-factory id="connectionFactory"
+        host="47.98.169.15" username="guest" password="guest" />
+    <rabbit:admin connection-factory="connectionFactory" />
+    <rabbit:template id="template" connection-factory="connectionFactory" />
+
+    <rabbit:queue name="remoting.queue" />
+<!--rabbit服务监听 prefetch 设置为1 为每次获取一个请求-->
+<!--消费者接收消息超时时长，receive-timeout 单位为毫秒-->
+    <rabbit:listener-container prefetch="1"   receive-timeout="2000" 
+        connection-factory="connectionFactory">
+        <rabbit:listener ref="listener" queue-names="remoting.queue" />
+    </rabbit:listener-container>
+</beans>

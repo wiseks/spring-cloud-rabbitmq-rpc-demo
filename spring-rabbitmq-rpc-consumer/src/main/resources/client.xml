@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd 
+    http://www.springframework.org/schema/rabbit
+    http://www.springframework.org/schema/rabbit/spring-rabbit-1.7.xsd">
+<!--注入服务接口-->
+    <bean id="client"
+        class="org.springframework.amqp.remoting.client.AmqpProxyFactoryBean">
+        <property name="amqpTemplate" ref="template" />
+        <property name="serviceInterface" value="com.service.AccountService" />
+    </bean>
+ <!--rabbit连接-->
+    <rabbit:connection-factory id="connectionFactory"
+        host="47.98.169.15" username="guest" password="guest" />
+    <rabbit:admin connection-factory="connectionFactory" />
+<!--创建rabbit 模板-->
+    <rabbit:template id="template" connection-factory="connectionFactory"
+        reply-timeout="2000" routing-key="remoting.binding" exchange="remoting.exchange" />
+
+    <rabbit:admin connection-factory="connectionFactory" />
+<!--用于缓存remoting请求的队列-->
+    <rabbit:queue name="remoting.queue" />
+
+    <rabbit:direct-exchange name="remoting.exchange">
+        <rabbit:bindings>
+            <rabbit:binding queue="remoting.queue" key="remoting.binding" />
+        </rabbit:bindings>
+    </rabbit:direct-exchange>
+</beans>
